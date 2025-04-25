@@ -2,6 +2,13 @@ import os
 import pandas as pd
 
 
+def find_song_titles(songs):
+    song = []
+    for _, row in songs.iterrows():
+        song = (row['name'])
+    return song
+
+
 def load_data(file_path='../data/music_dataset.csv'):
 
     """
