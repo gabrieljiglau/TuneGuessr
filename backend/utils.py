@@ -1,5 +1,49 @@
-import os
-import pandas as pd
+import numpy as np
+
+
+def find_clusters(df, df_features, input_songs, k_means, scaler):
+
+    """
+    :param df: the dataframe that holds the data
+    :param df_features: the dataframe that contains only the attributes that will be used during clusterization
+    :param input_songs: the songs selected by the user
+    :param k_means: the already trained clusterization algorithm
+    :param scaler: scale the features to have mean = 0 and std = 1
+    :return: the clusters for each song
+    """
+
+    songs = []
+    for i in range(len(input_songs)):
+        songs.append(df[df['name'] == input_songs[i]].iloc[0])
+
+    target_features = scaler.transform([song[df_features.columns].values for song in songs])
+    target_clusters = k_means.predict(target_features)
+
+    return target_clusters
+
+
+def compute_distance(scaler, row, features, target_features):
+    row_features = scaler.transform([row[features].values])
+    return np.linalg.norm(row_features - target_features)
+
+
+def find_closest_song(df, target_cluster, input_song, features, target_features, scaler, num_songs):
+
+    same_cluster = df[(df['cluster'] == target_cluster) & (df['name'] != input_song['name'])]
+
+    if same_cluster.empty:
+        return f"No similar songs for {input_song}"
+
+    same_cluster['distance'] = same_cluster[features].apply(
+        lambda row: compute_distance(scaler, row, features, target_features),
+        axis=1
+    )
+
+    closest_songs = same_cluster.sort_values('distance').iloc[0:num_songs]
+    for song in closest_songs:
+        print(f"closest_songs: {song['name']}")
+
+    return closest_songs
 
 
 def find_song_titles(songs):
@@ -9,40 +53,5 @@ def find_song_titles(songs):
     return song
 
 
-def load_data(file_path='../data/music_dataset.csv'):
-
-    """
-    :param file_path: the path where the csv resides
-    :return:  i) return None if the DataFrame doesn't exist or there is a problem parsing the csv
-             ii) return -1 if there is a problem when loading the data for training
-            iii) if successful, return the input attributes and target_y (the song id)
-    """
-
-    df, x_in = None, None
-    if os.path.exists(file_path):
-        try:
-            df = pd.read_csv(file_path)
-        except pd.errors.ParserError as e:
-            print(f"Parse error on the following csv, {file_path}: {e}")
-    else:
-        print("Input file doesn't exist")
-        return df
-
-    columns = ['artists', 'name', 'id', 'year', 'release_date']
-    x_in  = df.drop(columns=[col for col in columns])
-    return x_in, df['id']  # df['id'] = y_target
-
-
-def split_data(x_in, y_target):
-
-    train_size = int(0.8 * len(x_in))
-    x_train, x_eval = x_in[:train_size], x_in[train_size:]
-    y_train, y_eval = y_target[:train_size], y_target[train_size:]
-
-    return x_train, y_train, x_eval, y_eval
-
-
 if __name__ == '__main__':
-
-    x, y = load_data()
-    print(y[:20])
+    pass
