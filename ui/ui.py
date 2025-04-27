@@ -1,6 +1,7 @@
 import pandas as pd
 import tkinter as tk
 from ttkthemes import ThemedTk
+from backend.song_identifier import SongProcessor
 
 def main_screen():
     # Clear the old screen
@@ -22,12 +23,15 @@ def main_screen():
 
 
 def func_1_screen():
+    '''First functionality, the user answers some questions and the app will guess the song.
+    To do: only allow the user to give certain desired answers.
+    '''
     # Clear the old screen
     for widget in root.winfo_children():
         widget.destroy()
 
     # Load questions
-    df = pd.read_csv('questions.csv')
+    df = pd.read_csv('data/questions.csv')
     questions = df['question_name'].tolist()
 
     answers = []
@@ -38,9 +42,8 @@ def func_1_screen():
             question_label.config(text=questions[current_question[0]])
             answer_entry.delete(0, tk.END)
             answer_entry.focus_set()
-        else:
-            # No more questions, call func_1_identify function
-            result = func_1_identify(answers)
+        else: # if i dont have any more questions, display the result
+            result = func_1_identify(answers)   # call the backend
             func_1_display_result(result)
 
     def func_1_next_question():
@@ -76,11 +79,9 @@ def func_1_screen():
 
     func_1_show_question()
 
-# This is the function you will implement yourself
-def func_1_identify(answers):
-    # Dummy example
-    print(answers)
-    return f"Te gandesti la 'Buddy Holly' de Weezer"
+def func_1_identify(answers):  # call the backend
+    processor = SongProcessor(answers)
+    return processor.predict_song()
 
 def func_2_screen():
     pass
