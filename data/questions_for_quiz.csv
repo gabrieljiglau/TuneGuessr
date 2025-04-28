@@ -1,0 +1,12 @@
+id,question_name
+0,"Cât durează melodia în milisecunde?"
+1,"Cât de veselă crezi că este această piesă? (0 = tristă, 1 = foarte veselă)"
+2,"Cât de instrumentală este piesa? (0 = doar voce, 1 = doar instrumente)"
+3,"Cât de dansabilă ți se pare melodia? (0 = deloc, 1 = extrem)"
+4,"Câtă energie simți că transmite piesa? (0 = calmă, 1 = energică)"
+5,"Are melodia mai multe cuvinte sau e mai muzicală? (0 = muzicală, 1 = multă vorbire)"
+6,"Ți se pare că e un concert live? (0 = studio, 1 = live)"
+7,"Cât de tare ți se pare că e volumul piesei? (valoare negativă de obicei)"
+8,"Este melodia în ton major sau minor? (Scrie 1 pentru major, 0 pentru minor)"
+9,"Cât de mult se vorbește în această piesă? (0 = puțin, 1 = mult)"
+10,"Aproximativ câte bătăi pe minut (BPM) are această piesă?"
