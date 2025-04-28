@@ -3,12 +3,15 @@ import numpy as np
 import random
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import LabelEncoder
+import os
+import joblib
 
 class MusicQuizSystem:
-    def __init__(self, data_path, questions_path):
+    def __init__(self, data_path, questions_path, model_path='decision_tree_model.pkl'):
         self.data = pd.read_csv(data_path)
         self.questions = pd.read_csv(questions_path)
         self.model = None
+        self.model_path = model_path
         self.feature_mapping = self.create_feature_mapping()
         self._prepare_data()
 
@@ -29,21 +32,26 @@ class MusicQuizSystem:
         }
 
     def _prepare_data(self):
-        # valori lipsă și codificăm atribute dacă e nevoie
         self.data.fillna(0, inplace=True)
 
-        # Dacă sunt categorice, le codificăm
         if self.data['mode'].dtype == object:
             le = LabelEncoder()
             self.data['mode'] = le.fit_transform(self.data['mode'])
 
-        # decision tree simplu pe toate piesele
         features = list(self.feature_mapping.values())
         X = self.data[features]
-        y = self.data['name']  # vrem să putem identifica fiecare piesă
+        y = self.data['name']
 
-        self.model = DecisionTreeClassifier(max_depth=5) #limitare pentru a nu exploda RAM-ul
-        self.model.fit(X, y)
+        # Verificăm dacă există modelul salvat
+        if os.path.exists(self.model_path):
+            print(f" Modelul găsit la {self.model_path}, îl încarc...")
+            self.model = joblib.load(self.model_path)
+        else:
+            print(" Modelul NU există, antrenez unul nou...")
+            self.model = DecisionTreeClassifier(max_depth=5)
+            self.model.fit(X, y)
+            joblib.dump(self.model, self.model_path)
+            print(f" Modelul a fost antrenat și salvat în {self.model_path}")
 
     def select_song(self, song_id=None, song_name=None):
         if song_id:
