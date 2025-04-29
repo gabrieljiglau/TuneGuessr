@@ -3,107 +3,79 @@ import tkinter as tk
 from ttkthemes import ThemedTk
 from backend.song_identifier import SongProcessor
 
-def main_screen():
-    # Clear the old screen
-    for widget in root.winfo_children():
-        widget.destroy()
+class MusicRecommenderApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Music Recommender")
+        self.root.geometry('800x500')
+        self.root.configure(bg="#f0f0f0")
 
-    # Recreate the main menu
-    main_screen_label = tk.Label(root, text="Ecranul principal", font=("Helvetica", 20))
-    main_screen_label.pack(pady=20)
+        self.button_color = "#4CAF50"
+        self.button_text_color = "white"
+        self.label_color = "#333333"
+        self.text_size = 16
 
-    func_1_button = tk.Button(root, text="Funcționalitatea 1", command=func_1_screen, bg=button_color, fg=button_text_color, font=("Helvetica", text_size, "bold"), width=25)
-    func_1_button.pack(pady =(45,0), padx=30)
+        # Load questions for functionality 1
+        self.questions = pd.read_csv('data/questions.csv')
+        self.current_question_index = 0
+        self.answers = []
 
-    func_2_button = tk.Button(root, text="Funcționalitatea 2", command=func_2_screen, bg=button_color, fg=button_text_color, font=("Helvetica", text_size, "bold"), width=25)
-    func_2_button.pack(pady=(45,0), padx=30)
+        # Start main screen
+        self.show_main_screen()
 
-    func_3_button = tk.Button(root, text="Funcționalitatea 3", command=func_2_screen, bg=button_color, fg=button_text_color, font=("Helvetica", text_size, "bold"), width=25)
-    func_3_button.pack(pady=(45,0), padx=30)
-
-
-def func_1_screen():
-    '''First functionality, the user answers some questions and the app will guess the song.
-    To do: only allow the user to give certain desired answers.
-    '''
-    # Clear the old screen
-    for widget in root.winfo_children():
-        widget.destroy()
-
-    # Load questions
-    df = pd.read_csv('data/questions.csv')
-    questions = df['question_name'].tolist()
-
-    answers = []
-    current_question = [0]
-
-    def func_1_show_question():
-        if current_question[0] < len(questions):
-            question_label.config(text=questions[current_question[0]])
-            answer_entry.delete(0, tk.END)
-            answer_entry.focus_set()
-        else: # if i dont have any more questions, display the result
-            result = func_1_identify(answers)   # call the backend
-            func_1_display_result(result)
-
-    def func_1_next_question():
-        answer = answer_entry.get()
-        if answer.strip() != "":
-            answers.append(answer)
-            current_question[0] += 1
-            func_1_show_question()
-
-    def func_1_display_result(result_text):
-        # Clear screen
-        for widget in root.winfo_children():
+    def clear_screen(self):
+        for widget in self.root.winfo_children():
             widget.destroy()
 
-        result_label = tk.Label(root, text="Rezultat: " + result_text, font=("Helvetica", 20), wraplength=700, justify="center")
-        result_label.pack(pady=30)
+    def show_main_screen(self):
+        self.clear_screen()
 
-        back_button = tk.Button(root, text="Înapoi la meniul principal", command=main_screen, bg=button_color, fg=button_text_color, font=("Helvetica", text_size, "bold"))
+        main_label = tk.Label(self.root, text="Ecranul principal", font=("Helvetica", 20))
+        main_label.pack(pady=20)
+
+        func1_button = tk.Button(self.root, text="Funcționalitatea 1", command=self.show_func1_screen, bg=self.button_color, fg=self.button_text_color, font=("Helvetica", self.text_size, "bold"), width=25)
+        func1_button.pack(pady=(45, 0), padx=30)
+
+    def show_func1_screen(self):
+        self.clear_screen()
+        self.answers = []
+        self.current_question_index = 0
+        self.ask_question()
+
+    def ask_question(self):
+        self.clear_screen()
+        if self.current_question_index >= len(self.questions):
+            self.finish_questionnaire()
+            return
+
+        question_text = self.questions.iloc[self.current_question_index]['question_name']
+        question_label = tk.Label(self.root, text=question_text, font=("Helvetica", 16))
+        question_label.pack(pady=20)
+
+        self.answer_entry = tk.Entry(self.root, font=("Helvetica", 14))
+        self.answer_entry.pack(pady=10)
+
+        submit_button = tk.Button(self.root, text="Submit", command=self.save_answer, bg=self.button_color, fg=self.button_text_color, font=("Helvetica", self.text_size, "bold"))
+        submit_button.pack(pady=20)
+
+    def save_answer(self):
+        answer = self.answer_entry.get()
+        self.answers.append(answer)
+        self.current_question_index += 1
+        self.ask_question()
+
+    def finish_questionnaire(self):
+        processor = SongProcessor(self.answers)
+        result = processor.predict_song()
+
+        self.clear_screen()
+        result_label = tk.Label(self.root, text=f"Melodia identificată:\n{result}", font=("Helvetica", 18))
+        result_label.pack(pady=20)
+
+        back_button = tk.Button(self.root, text="Back to Main", command=self.show_main_screen, bg=self.button_color, fg=self.button_text_color, font=("Helvetica", self.text_size, "bold"))
         back_button.pack(pady=20)
-
-    # GUI elements
-    question_label = tk.Label(root, text="", font=("Helvetica", 18), wraplength=700, justify="center")
-    question_label.pack(pady=30)
-
-    answer_entry = tk.Entry(root, font=("Helvetica", 16), width=50)
-    answer_entry.pack(pady=10)
-
-    next_button = tk.Button(root, text="Următoarea întrebare", command=func_1_next_question, bg=button_color, fg=button_text_color, font=("Helvetica", text_size, "bold"))
-    next_button.pack(pady=15)
-
-    back_button = tk.Button(root, text="Înapoi", command=main_screen, bg=button_color, fg=button_text_color, font=("Helvetica", text_size, "bold"))
-    back_button.pack(pady=10)
-
-    func_1_show_question()
-
-def func_1_identify(answers):  # call the backend
-    processor = SongProcessor(answers)
-    return processor.predict_song()
-
-def func_2_screen():
-    pass
-
-def func_3_screen():
-    pass
-
 
 if __name__ == '__main__':
     root = ThemedTk(theme="clam")
-    root.title("Music Recommender")
-    root.geometry('800x500')
-
-    bg_color = "#f0f0f0"  # light gray
-    button_color = "#4CAF50"  # green
-    button_text_color = "white"
-    label_color = "#333333"  # gray
-    combobox_color = "#ffffff"  # white
-    text_size = 16
-
-    root.configure(bg=bg_color)
-
-    main_screen()
-
+    app = MusicRecommenderApp(root)
     root.mainloop()
