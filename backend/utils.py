@@ -64,7 +64,7 @@ def find_closest_song(df, target_cluster, input_song, features, target_features,
     same_cluster = df[(df['cluster'] == target_cluster) & (df['name'] != input_song['name'])]
 
     if same_cluster.empty:
-        return f"No similar songs for {input_song}"
+        return -1
 
     same_cluster = same_cluster.copy()
     same_cluster['distance'] = same_cluster.apply(
@@ -77,3 +77,13 @@ def find_closest_song(df, target_cluster, input_song, features, target_features,
         print(f"closest_songs: {song['name']} by {song['artists']}")
 
     return closest_songs
+
+
+def eliminate_attributes(df, attributes):
+
+    to_remove = []
+    for col in df.columns:
+        if not col in attributes:
+            to_remove.append(col)
+
+    return df.drop(to_remove, axis=1)
