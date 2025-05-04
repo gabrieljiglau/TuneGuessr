@@ -1,5 +1,8 @@
-import os
+import numpy as np
 import pandas as pd
+import warnings
+
+warnings.filterwarnings('ignore')
 
 
 def find_song_titles(songs):
@@ -9,40 +12,78 @@ def find_song_titles(songs):
     return song
 
 
-def load_data(file_path='../data/music_dataset.csv'):
+def transform_input(df, input_list):
+
+    new_list = []
+    for song_identifier in input_list:
+        if not df[df['id'] == song_identifier].empty:
+            song_name = df[df['id'] == song_identifier].iloc[0]['name']
+            new_list.append(song_name)
+        else:
+            new_list.append(song_identifier)
+
+    return new_list
+
+
+def find_clusters(df, df_features, input_songs, k_means, scaler):
 
     """
-    :param file_path: the path where the csv resides
-    :return:  i) return None if the DataFrame doesn't exist or there is a problem parsing the csv
-             ii) return -1 if there is a problem when loading the data for training
-            iii) if successful, return the input attributes and target_y (the song id)
+    :param df: the dataframe that holds the data
+    :param df_features: the dataframe that contains only the attributes that will be used during clusterization
+    :param input_songs: the songs selected by the user
+    :param k_means: the already trained clusterization algorithm
+    :param scaler: scale the features to have mean = 0 and std = 1
+    :return: the clusters for each song
     """
 
-    df, x_in = None, None
-    if os.path.exists(file_path):
-        try:
-            df = pd.read_csv(file_path)
-        except pd.errors.ParserError as e:
-            print(f"Parse error on the following csv, {file_path}: {e}")
-    else:
-        print("Input file doesn't exist")
-        return df
+    songs = []
+    for song_name in input_songs:
+        match = df[df['name'] == song_name]
+        if not match.empty:
+            songs.append(match.iloc[0])
+        else:
+            print(f"Warning: song '{song_name}' not found in dataset!")
 
-    columns = ['artists', 'name', 'id', 'year', 'release_date']
-    x_in  = df.drop(columns=[col for col in columns])
-    return x_in, df['id']  # df['id'] = y_target
+    if not songs:
+        raise ValueError("No valid input songs found in dataset.")
+
+    song_features = np.vstack([song[df_features.columns].values for song in songs])
+    features_df = pd.DataFrame(song_features, columns=df_features.columns)
+    target_features = scaler.transform(features_df)
+    target_clusters = k_means.predict(target_features)
+
+    return target_clusters
+
+def compute_distance(scaler, row, features, target_features):
+    row_features = scaler.transform([row[features].values])
+    return np.linalg.norm(row_features - target_features)
 
 
-def split_data(x_in, y_target):
+def find_closest_song(df, target_cluster, input_song, features, target_features, scaler, num_songs):
 
-    train_size = int(0.8 * len(x_in))
-    x_train, x_eval = x_in[:train_size], x_in[train_size:]
-    y_train, y_eval = y_target[:train_size], y_target[train_size:]
+    same_cluster = df[(df['cluster'] == target_cluster) & (df['name'] != input_song['name'])]
 
-    return x_train, y_train, x_eval, y_eval
+    if same_cluster.empty:
+        return -1
+
+    same_cluster = same_cluster.copy()
+    same_cluster['distance'] = same_cluster.apply(
+        lambda row: compute_distance(scaler, row, features, target_features),
+        axis=1
+    )
+
+    closest_songs = same_cluster.sort_values('distance').iloc[0:num_songs]
+    for _, song in closest_songs.iterrows():
+        print(f"closest_songs: {song['name']} by {song['artists']}")
+
+    return closest_songs
 
 
-if __name__ == '__main__':
+def eliminate_attributes(df, attributes):
 
-    x, y = load_data()
-    print(y[:20])
+    to_remove = []
+    for col in df.columns:
+        if not col in attributes:
+            to_remove.append(col)
+
+    return df.drop(to_remove, axis=1)
