@@ -7,7 +7,7 @@ import os
 import joblib
 
 class MusicQuizSystem:
-    def __init__(self, data_path, questions_path, model_path='decision_tree_model.pkl'):
+    def __init__(self, data_path, questions_path, model_path='../models/decision_tree_model.pkl'):
         self.data = pd.read_csv(data_path)
         self.questions = pd.read_csv(questions_path)
         self.model = None
