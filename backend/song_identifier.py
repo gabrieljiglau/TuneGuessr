@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import List
-from utils import find_song_titles
+from .utils import find_song_titles
 
 
 class SongProcessor:
@@ -44,7 +44,7 @@ class SongProcessor:
 
          elif index == 2:
             answer = answer.lower()
-            if answer == 'da, foarte multe':
+            if answer == 'da foarte multe':
                df = df[df['acousticness'] < 0.3]
             elif answer == 'are suficiente':
                df = df[(df['acousticness'] >= 0.3) & (df['acousticness'] < 0.6)]
@@ -71,7 +71,7 @@ class SongProcessor:
 
          elif index == 5:
             answer = answer.lower()
-            if answer == 'da, foarte multe':
+            if answer == 'da foarte multe':
                df = df[df['instrumentalness'] < 0.3]
             elif answer == 'are suficiente':
                df = df[(df['instrumentalness'] >= 0.3) & (df['instrumentalness'] < 0.7)]
@@ -82,7 +82,7 @@ class SongProcessor:
             answer = answer.lower()
             if answer == '100% inregistrata':
                df = df[df['liveness'] < 0.3]
-            elif answer == 'inregistrata, dar are si ceva audienta':
+            elif answer == 'inregistrata dar are si ceva audienta':
                df = df[(df['liveness'] >= 0.3) & (df['liveness'] < 0.7)]
             elif answer == 'clar demonstratie live':
                df = df[df['liveness'] >= 0.7]
