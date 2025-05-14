@@ -3,7 +3,7 @@ import joblib
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
-from utils import *
+from .utils import *
 
 
 class Recommender:
