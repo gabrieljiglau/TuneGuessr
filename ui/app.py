@@ -10,6 +10,7 @@ import os
 backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(backend_dir)
 from backend.song_identifier import SongProcessor
+from backend.song_recommender import Recommender
 
 class MusicRecommenderApp:
     def __init__(self, root):
@@ -45,6 +46,13 @@ class MusicRecommenderApp:
         func1_button = tk.Button(self.root, text="Robotul Ghiceste Melodia", command=self.show_func1_screen, bg=self.button_color, fg=self.button_text_color, font=("Helvetica", self.text_size, "bold"), width=25)
         func1_button.pack(pady=(45, 0), padx=30)
 
+        func3_button = tk.Button(
+            self.root, text="Robotul Recomanda Melodii", command=self.show_func3_screen,
+            bg=self.button_color, fg=self.button_text_color,
+            font=("Helvetica", self.text_size, "bold"), width=25
+        )
+        func3_button.pack(pady=10)
+
     def show_func1_screen(self):
         self.clear_screen()
         self.answers = []
@@ -57,17 +65,18 @@ class MusicRecommenderApp:
             self.finish_questionnaire()
             return
 
-        question_id = self.current_question_index + 1  # question IDs start from 1
+        question_id = self.current_question_index + 1  # assuming question IDs start from 1
         question_text = self.questions.iloc[self.current_question_index]['question_name']
 
         question_label = tk.Label(self.root, text=question_text, font=("Helvetica", 16))
         question_label.pack(pady=20)
 
+        # Get the answer variant for this question
         row = self.answer_variants[self.answer_variants['id'] == question_id]
         if not row.empty:
             answers = row.iloc[0]['answers']
             if answers.strip() == "int":
-                # text box for int
+                # Create entry box for integer input
                 self.answer_entry = tk.Entry(self.root, font=("Helvetica", 14))
                 self.answer_entry.pack(pady=10)
 
@@ -76,7 +85,7 @@ class MusicRecommenderApp:
                                           font=("Helvetica", self.text_size, "bold"))
                 submit_button.pack(pady=20)
             else:
-                # buttons
+                # Create buttons for each option
                 options = [opt.strip() for opt in answers.split(',')]
                 for opt in options:
                     btn = tk.Button(self.root, text=opt,
@@ -85,7 +94,7 @@ class MusicRecommenderApp:
                                     font=("Helvetica", self.text_size))
                     btn.pack(pady=5)
         else:
-            # Fallback
+            # Fallback: simple entry if something went wrong
             self.answer_entry = tk.Entry(self.root, font=("Helvetica", 14))
             self.answer_entry.pack(pady=10)
 
@@ -129,6 +138,56 @@ class MusicRecommenderApp:
 
         back_button = tk.Button(self.root, text="Back to Main", command=self.show_main_screen, bg=self.button_color, fg=self.button_text_color, font=("Helvetica", self.text_size, "bold"))
         back_button.pack(pady=20)
+
+    def show_func3_screen(self):
+        self.clear_screen()
+
+        label = tk.Label(self.root, text="Enter song titles or IDs (newline-separated):", font=("Helvetica", 16))
+        label.pack(pady=20)
+
+
+        self.songs_text = tk.Text(self.root, font=("Helvetica", 14), width=60, height=10)
+        self.songs_text.pack(pady=10)
+
+        submit_button = tk.Button(self.root, text="Find Similar Songs", command=self.find_similar_songs_func3,
+                                  bg=self.button_color, fg=self.button_text_color,
+                                  font=("Helvetica", self.text_size, "bold"))
+        submit_button.pack(pady=20)
+
+        back_button = tk.Button(self.root, text="Back to Main", command=self.show_main_screen,
+                                bg=self.button_color, fg=self.button_text_color,
+                                font=("Helvetica", self.text_size, "bold"))
+        back_button.pack(pady=10)
+
+    def find_similar_songs_func3(self):
+        song_input = self.songs_text.get("1.0", tk.END)
+        song_list = [s.strip() for s in song_input.split('\n') if s.strip()]
+
+        recommender = Recommender(song_list)
+        closest_songs = recommender.find_similar_songs(3)
+
+        self.clear_screen()
+
+        if closest_songs == -1:
+            error_label = tk.Label(self.root, text="Invalid song(s). Please try again.", font=("Helvetica", 16),
+                                   fg="red")
+            error_label.pack(pady=20)
+        else:
+            result_label = tk.Label(self.root, text="Recommended Songs:", font=("Helvetica", 18))
+            result_label.pack(pady=20)
+
+            for group in closest_songs:
+                for _, row in group.iterrows():
+                    song_name = row['name']
+                    artist = row['artists']
+                    label = tk.Label(self.root, text=f"{song_name} by {artist}", font=("Helvetica", 14))
+                    label.pack(pady=2)
+
+        back_button = tk.Button(self.root, text="Back to Main", command=self.show_main_screen,
+                                bg=self.button_color, fg=self.button_text_color,
+                                font=("Helvetica", self.text_size, "bold"))
+        back_button.pack(pady=20)
+
 
 if __name__ == '__main__':
     root = ThemedTk(theme="clam")
