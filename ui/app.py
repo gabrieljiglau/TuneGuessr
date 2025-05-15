@@ -189,24 +189,67 @@ class MusicRecommenderApp:
 
         self.clear_screen()
 
+        # --- Create a canvas and scrollable frame ---
+        canvas = tk.Canvas(self.root)
+        scrollbar = tk.Scrollbar(self.root, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        # --- End scroll setup ---
+
         if closest_songs == -1:
-            error_label = tk.Label(self.root, text="Melodii invalide, reîncearcă.", font=("Helvetica", 16),
+            error_label = tk.Label(scrollable_frame, text="Melodii invalide, reîncearcă.", font=("Helvetica", 16),
                                    fg="red")
             error_label.pack(pady=20)
         else:
-            result_label = tk.Label(self.root, text="Melodii recomandate:", font=("Helvetica", 18))
+            similarities, differences = recommender.find_similarities_and_differences(closest_songs)
+
+            result_label = tk.Label(scrollable_frame, text="Melodii recomandate:", font=("Helvetica", 18))
             result_label.pack(pady=20)
 
-            for group in closest_songs:
-                label = tk.Label(self.root, text=" ", font=("Helvetica", 14))
-                label.pack(pady=2)
-                for index, row in group.iterrows():
-                    song_name = row['name']
-                    artist = row['artists']
-                    label = tk.Label(self.root, text=f"{song_name} de {artist}", font=("Helvetica", 14))
-                    label.pack(pady=2)
+            for group, similarity, difference in zip(closest_songs, similarities, differences):
+                spacer = tk.Label(scrollable_frame, text=" ", font=("Helvetica", 14))
+                spacer.pack(pady=2)
 
-        back_button = tk.Button(self.root, text="Înapoi la ecranul principal", command=self.show_main_screen,
+                for index, row in group.iterrows():
+                    song_title = row['name']
+                    artist = row['artists']
+                    videos_search = VideosSearch(f"{song_title} {artist}", limit=1)
+                    video_result = videos_search.result()['result'][0]
+                    video_url = video_result['link']
+
+                    play_button = tk.Button(
+                        scrollable_frame,
+                        text=f"{song_title} de {artist}",
+                        command=lambda url=video_url: webbrowser.open(url),
+                        bg=self.button_color,
+                        fg=self.button_text_color,
+                        font=("Helvetica", self.text_size, "bold"),
+                        relief="raised",
+                        cursor="hand2"
+                    )
+                    play_button.pack(pady=10)
+
+                similarity_label = tk.Label(scrollable_frame, text=f"Similarități:\n{similarity}",
+                                            font=("Helvetica", 14), wraplength=750)
+                similarity_label.pack(pady=2)
+
+                difference_label = tk.Label(scrollable_frame, text=f"Diferențe:\n{difference}", font=("Helvetica", 14),
+                                            wraplength=750)
+                difference_label.pack(pady=2)
+
+        back_button = tk.Button(scrollable_frame, text="Înapoi la ecranul principal", command=self.show_main_screen,
                                 bg=self.button_color, fg=self.button_text_color,
                                 font=("Helvetica", self.text_size, "bold"))
         back_button.pack(pady=20)
