@@ -11,6 +11,7 @@ backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(backend_dir)
 from backend.song_identifier import SongProcessor
 from backend.song_recommender import Recommender
+from backend.quiz_system import MusicQuizSystem
 
 class MusicRecommenderApp:
     def __init__(self, root):
@@ -30,6 +31,16 @@ class MusicRecommenderApp:
         self.current_question_index = 0
         self.answers = []
 
+        # Load quiz system for functionality 2
+        self.quiz_system = MusicQuizSystem(
+        data_path='../data/music_dataset.csv',
+        questions_path='../data/questions_for_quiz.csv'
+        )
+        self.quiz_song = None
+        self.quiz_correct_answers = []
+        self.quiz_user_answers = []
+        self.quiz_current_index = 0
+
         # Start main screen
         self.show_main_screen()
 
@@ -45,6 +56,15 @@ class MusicRecommenderApp:
 
         func1_button = tk.Button(self.root, text="Robotul Ghiceste Melodia", command=self.show_func1_screen, bg=self.button_color, fg=self.button_text_color, font=("Helvetica", self.text_size, "bold"), width=25)
         func1_button.pack(pady=(45, 0), padx=30)
+
+        func2_button = tk.Button(
+        self.root, text="Tu ghicești Melodia",
+        command=self.start_quiz,
+        bg=self.button_color, fg=self.button_text_color,
+        font=("Helvetica", self.text_size, "bold"), width=25
+        )   
+        func2_button.pack(pady=10)
+
 
         func3_button = tk.Button(
             self.root, text="Robotul Recomanda Melodii", command=self.show_func3_screen,
@@ -187,6 +207,81 @@ class MusicRecommenderApp:
                                 bg=self.button_color, fg=self.button_text_color,
                                 font=("Helvetica", self.text_size, "bold"))
         back_button.pack(pady=20)
+
+    #func2
+
+    def show_quiz_question(self):
+        self.clear_screen()
+        if self.quiz_current_index >= len(self.quiz_system.feature_mapping):
+            self.finish_quiz()
+            return
+
+        qid = self.quiz_current_index
+        feature = self.quiz_system.feature_mapping[qid]
+        question = self.quiz_system.questions.loc[self.quiz_system.questions['id'] == qid, 'question_name'].values[0]
+        correct_value = self.quiz_song[feature]
+
+        self.quiz_correct_answers.append(correct_value)
+
+        label = tk.Label(self.root, text=question, font=("Helvetica", 16))
+        label.pack(pady=20)
+
+        self.quiz_answer_entry = tk.Entry(self.root, font=("Helvetica", 14))
+        self.quiz_answer_entry.pack(pady=10)
+
+        submit_button = tk.Button(self.root, text="Submit", command=self.save_quiz_answer,
+                                bg=self.button_color, fg=self.button_text_color,
+                                font=("Helvetica", self.text_size, "bold"))
+        submit_button.pack(pady=20)
+
+    def save_quiz_answer(self):
+        answer = self.quiz_answer_entry.get()
+        self.quiz_user_answers.append(answer)
+        self.quiz_current_index += 1
+        self.show_quiz_question()
+
+    def finish_quiz(self):
+        self.clear_screen()
+        score = 0
+        total = len(self.quiz_user_answers)
+
+        result_label = tk.Label(self.root, text=f"Melodia era:\n{self.quiz_song['name']}", font=("Helvetica", 18))
+        result_label.pack(pady=20)
+
+        for idx, (ua, ca) in enumerate(zip(self.quiz_user_answers, self.quiz_correct_answers)):
+            try:
+                ua_float = float(ua)
+                ca_float = float(ca)
+                similarity = 1 - abs(ua_float - ca_float) / (abs(ca_float) + 1e-5)
+                similarity = max(0, similarity)
+            except:
+                similarity = 1 if str(ua).lower() == str(ca).lower() else 0
+
+            if similarity > 0.8:
+                score += 1
+                status = "✔ Corect"
+            else:
+                status = f"✘ Greșit (corect: {ca})"
+
+            feedback = tk.Label(self.root, text=f"Întrebarea {idx+1}: {status}", font=("Helvetica", 14))
+            feedback.pack()
+
+        score_label = tk.Label(self.root, text=f"\nScor final: {score} / {total}", font=("Helvetica", 16, "bold"))
+        score_label.pack(pady=20)
+
+        back_button = tk.Button(self.root, text="Back to Main", command=self.show_main_screen,
+                                bg=self.button_color, fg=self.button_text_color,
+                                font=("Helvetica", self.text_size, "bold"))
+        back_button.pack(pady=20)
+
+
+    def start_quiz(self):
+        self.clear_screen()
+        self.quiz_song = self.quiz_system.select_song()
+        self.quiz_correct_answers = []
+        self.quiz_user_answers = []
+        self.quiz_current_index = 0
+        self.show_quiz_question()
 
 
 if __name__ == '__main__':
