@@ -101,7 +101,7 @@ class MusicRecommenderApp:
                 self.answer_entry.pack(pady=10)
                 self.answer_entry.focus_set()
 
-                submit_button = tk.Button(self.root, text="Submit", command=self.save_answer_from_entry,
+                submit_button = tk.Button(self.root, text="Trimite", command=self.save_answer_from_entry,
                                           bg=self.button_color, fg=self.button_text_color,
                                           font=("Helvetica", self.text_size, "bold"))
                 submit_button.pack(pady=20)
@@ -119,7 +119,7 @@ class MusicRecommenderApp:
             self.answer_entry = tk.Entry(self.root, font=("Helvetica", 14))
             self.answer_entry.pack(pady=10)
 
-            submit_button = tk.Button(self.root, text="Submit", command=self.save_answer_from_entry,
+            submit_button = tk.Button(self.root, text="Trimite", command=self.save_answer_from_entry,
                                       bg=self.button_color, fg=self.button_text_color,
                                       font=("Helvetica", self.text_size, "bold"))
             submit_button.pack(pady=20)
@@ -152,18 +152,17 @@ class MusicRecommenderApp:
         video_result = videos_search.result()['result'][0]
         video_url = video_result['link']
 
-        play_button = tk.Button(self.root, text="Play on YouTube", command=lambda: webbrowser.open(video_url),
+        play_button = tk.Button(self.root, text="Ascultă pe YouTube", command=lambda: webbrowser.open(video_url),
                                 bg=self.button_color, fg=self.button_text_color,
                                 font=("Helvetica", self.text_size, "bold"))
         play_button.pack(pady=10)
 
-        back_button = tk.Button(self.root, text="Back to Main", command=self.show_main_screen, bg=self.button_color, fg=self.button_text_color, font=("Helvetica", self.text_size, "bold"))
+        back_button = tk.Button(self.root, text="Înapoi la ecranul principal", command=self.show_main_screen, bg=self.button_color, fg=self.button_text_color, font=("Helvetica", self.text_size, "bold"))
         back_button.pack(pady=20)
 
     def show_func3_screen(self):
         self.clear_screen()
-
-        label = tk.Label(self.root, text="Enter song titles or IDs (newline-separated):", font=("Helvetica", 16))
+        label = tk.Label(self.root, text="Introdu titluri de melodii sau ID (separate de return):", font=("Helvetica", 16))
         label.pack(pady=20)
 
 
@@ -171,12 +170,12 @@ class MusicRecommenderApp:
         self.songs_text.pack(pady=10)
         self.songs_text.focus_set()
 
-        submit_button = tk.Button(self.root, text="Find Similar Songs", command=self.find_similar_songs_func3,
+        submit_button = tk.Button(self.root, text="Găsește melodii similare", command=self.find_similar_songs_func3,
                                   bg=self.button_color, fg=self.button_text_color,
                                   font=("Helvetica", self.text_size, "bold"))
         submit_button.pack(pady=20)
 
-        back_button = tk.Button(self.root, text="Back to Main", command=self.show_main_screen,
+        back_button = tk.Button(self.root, text="Înapoi la ecranul principal", command=self.show_main_screen,
                                 bg=self.button_color, fg=self.button_text_color,
                                 font=("Helvetica", self.text_size, "bold"))
         back_button.pack(pady=10)
@@ -186,26 +185,28 @@ class MusicRecommenderApp:
         song_list = [s.strip() for s in song_input.split('\n') if s.strip()]
 
         recommender = Recommender(song_list)
-        closest_songs = recommender.find_similar_songs(3)
+        closest_songs = recommender.find_similar_songs(2)
 
         self.clear_screen()
 
         if closest_songs == -1:
-            error_label = tk.Label(self.root, text="Invalid song(s). Please try again.", font=("Helvetica", 16),
+            error_label = tk.Label(self.root, text="Melodii invalide, reîncearcă.", font=("Helvetica", 16),
                                    fg="red")
             error_label.pack(pady=20)
         else:
-            result_label = tk.Label(self.root, text="Recommended Songs:", font=("Helvetica", 18))
+            result_label = tk.Label(self.root, text="Melodii recomandate:", font=("Helvetica", 18))
             result_label.pack(pady=20)
 
             for group in closest_songs:
-                for _, row in group.iterrows():
+                label = tk.Label(self.root, text=" ", font=("Helvetica", 14))
+                label.pack(pady=2)
+                for index, row in group.iterrows():
                     song_name = row['name']
                     artist = row['artists']
-                    label = tk.Label(self.root, text=f"{song_name} by {artist}", font=("Helvetica", 14))
+                    label = tk.Label(self.root, text=f"{song_name} de {artist}", font=("Helvetica", 14))
                     label.pack(pady=2)
 
-        back_button = tk.Button(self.root, text="Back to Main", command=self.show_main_screen,
+        back_button = tk.Button(self.root, text="Înapoi la ecranul principal", command=self.show_main_screen,
                                 bg=self.button_color, fg=self.button_text_color,
                                 font=("Helvetica", self.text_size, "bold"))
         back_button.pack(pady=20)
@@ -234,7 +235,7 @@ class MusicRecommenderApp:
 
         self.root.bind('<Return>', self.submit_quiz_answer_event)
 
-        submit_button = tk.Button(self.root, text="Submit", command=self.save_quiz_answer,
+        submit_button = tk.Button(self.root, text="Trimite", command=self.save_quiz_answer,
                                 bg=self.button_color, fg=self.button_text_color,
                                 font=("Helvetica", self.text_size, "bold"))
         submit_button.pack(pady=20)
@@ -278,7 +279,7 @@ class MusicRecommenderApp:
         score_label = tk.Label(self.root, text=f"\nScor final: {score} / {total}", font=("Helvetica", 16, "bold"))
         score_label.pack(pady=20)
 
-        back_button = tk.Button(self.root, text="Back to Main", command=self.show_main_screen,
+        back_button = tk.Button(self.root, text="Înapoi la ecranul principal", command=self.show_main_screen,
                                 bg=self.button_color, fg=self.button_text_color,
                                 font=("Helvetica", self.text_size, "bold"))
         back_button.pack(pady=20)
@@ -299,13 +300,13 @@ class MusicRecommenderApp:
         video_result = videos_search.result()['result'][0]
         video_url = video_result['link']
 
-        play_button = tk.Button(self.root, text="Play on YouTube", command=lambda: webbrowser.open(video_url),
+        play_button = tk.Button(self.root, text="Ascultă pe YouTube", command=lambda: webbrowser.open(video_url),
                                 bg=self.button_color, fg=self.button_text_color,
                                 font=("Helvetica", self.text_size, "bold"))
         play_button.pack(pady=10)
 
         # Start quiz button
-        start_button = tk.Button(self.root, text="Start Quiz", command=self.show_quiz_question,
+        start_button = tk.Button(self.root, text="Începe chestionar", command=self.show_quiz_question,
                                  bg=self.button_color, fg=self.button_text_color,
                                  font=("Helvetica", self.text_size, "bold"))
         start_button.pack(pady=20)
