@@ -4,18 +4,25 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from .utils import *
+from dotenv import load_dotenv
+
+load_dotenv()
+dataset_path = os.getenv('DATASET')
+scaler_path = os.getenv('SCALER_PATH')
+kmeans_path = os.getenv('K_MEANS')
+kmeans_clusters = os.getenv('K_MEANS_CLUSTERS')
 
 
 class Recommender:
 
-    def __init__(self, input_songs, data='../data/music_dataset.csv'):
+    def __init__(self, input_songs, data=dataset_path):
 
         self.input_songs = input_songs
         self.df = pd.read_csv(data)
         self.df_features = self.df.drop(columns=['Unnamed: 0.1', 'Unnamed: 0' ,'id', 'name',
                                                  'artists', 'release_date', 'year'])
-        self.scaler_path = '../models/scaler.pkl'
-        self.k_means_path = '../models/k_means.pkl'
+        self.scaler_path = scaler_path
+        self.k_means_path = kmeans_path
 
     def validate_input(self, input_list):
 
@@ -29,7 +36,7 @@ class Recommender:
 
         return True
 
-    def find_similar_songs(self, num_songs=6, model_name='../data/k_means_clusters.csv'):
+    def find_similar_songs(self, num_songs=6, model_name=kmeans_clusters):
 
         """
         applies KMeans with k = 5 clusters, corresponding to 'Pop', 'EDM', 'Jazz', 'Rap' and 'Rock';

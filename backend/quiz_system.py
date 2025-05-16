@@ -5,10 +5,17 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import LabelEncoder
 import os
 import joblib
+from dotenv import load_dotenv
+
+load_dotenv()
+decision_tree = os.getenv('DECISION_TREE')
+dataset = os.getenv('DATASET')
+quiz_path = os.getenv('QUIZ')
 
 class MusicQuizSystem:
-    def __init__(self, data_path, questions_path, model_path='../models/decision_tree_model.pkl'):
+    def __init__(self, data_path, questions_path, model_path=decision_tree):
         self.data = pd.read_csv(data_path)
+        print(f"questions_path = {questions_path}")
         self.questions = pd.read_csv(questions_path)
         self.model = None
         self.model_path = model_path
@@ -119,6 +126,8 @@ class MusicQuizSystem:
         user_answers, correct_answers = self.ask_questions(song)
         self.evaluate(user_answers, correct_answers)
 
+
 if __name__ == '__main__':
-    quiz = MusicQuizSystem('../data/music_dataset.csv', '../data/questions_for_quiz.csv')
+
+    quiz = MusicQuizSystem(data_path=dataset, questions_path=quiz_path)
     quiz.run()  # fara args alege random sau quiz.run(song_id="0QU5xT6Mik4vpyt1ItsRXK") pentru un anumit ID
