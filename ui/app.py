@@ -41,6 +41,9 @@ class MusicRecommenderApp:
         self.quiz_user_answers = []
         self.quiz_current_index = 0
 
+        # A way to know how many songs the song recommender will recommend:
+        self.recommend_songs_counter = 2
+
         # Start main screen
         self.show_main_screen()
 
@@ -72,6 +75,7 @@ class MusicRecommenderApp:
             font=("Helvetica", self.text_size, "bold"), width=25
         )
         func3_button.pack(pady=(40,0))
+        self.recommend_songs_counter = 2
 
     def show_func1_screen(self):
         self.clear_screen()
@@ -185,7 +189,7 @@ class MusicRecommenderApp:
         song_list = [s.strip() for s in song_input.split('\n') if s.strip()]
 
         recommender = Recommender(song_list)
-        closest_songs = recommender.find_similar_songs(2)
+        closest_songs = recommender.find_similar_songs(self.recommend_songs_counter)
 
         self.clear_screen()
 
@@ -218,36 +222,52 @@ class MusicRecommenderApp:
             result_label = tk.Label(scrollable_frame, text="Melodii recomandate:", font=("Helvetica", 18))
             result_label.pack(pady=20)
 
-            for group, similarity, difference in zip(closest_songs, similarities, differences):
-                spacer = tk.Label(scrollable_frame, text=" ", font=("Helvetica", 14))
-                spacer.pack(pady=2)
+            # assume song_list is still in scope
+            for i, (group, sim_lists, diff_lists) in enumerate(zip(closest_songs, similarities, differences)):
+                user_song = song_list[i]
 
-                for index, row in group.iterrows():
-                    song_title = row['name']
-                    artist = row['artists']
-                    videos_search = VideosSearch(f"{song_title} {artist}", limit=1)
-                    video_result = videos_search.result()['result'][0]
-                    video_url = video_result['link']
+                spacer = tk.Label(scrollable_frame, text="––––––––––––––––––––––––––––––––––", font=("Helvetica", 12)) # to separate different songs
+                spacer.pack(pady=5)
+
+                for j, (_, row) in enumerate(group.iterrows()):
+                    reco_title = row['name']
+                    reco_artist = row['artists']
+
+                    # YouTube button
+                    search_query = f"{reco_title} {reco_artist}"
+                    videos_search = VideosSearch(search_query, limit=1)
+                    video_url = videos_search.result()['result'][0]['link']
 
                     play_button = tk.Button(
                         scrollable_frame,
-                        text=f"{song_title} de {artist}",
+                        text=f"{reco_title} de {reco_artist}",
                         command=lambda url=video_url: webbrowser.open(url),
                         bg=self.button_color,
                         fg=self.button_text_color,
                         font=("Helvetica", self.text_size, "bold"),
-                        relief="raised",
                         cursor="hand2"
                     )
-                    play_button.pack(pady=10)
+                    play_button.pack(pady=(10, 2))
 
-                similarity_label = tk.Label(scrollable_frame, text=f"Similarități:\n{similarity}",
-                                            font=("Helvetica", 14), wraplength=750)
-                similarity_label.pack(pady=2)
+                    # pick the j‑th similarity & difference list
+                    sim_attrs = sim_lists[j]
+                    diff_attrs = diff_lists[j]
 
-                difference_label = tk.Label(scrollable_frame, text=f"Diferențe:\n{difference}", font=("Helvetica", 14),
-                                            wraplength=750)
-                difference_label.pack(pady=2)
+                    # formatted messages
+                    sim_text = (
+                        f"Asemănările între melodia introdusă „{user_song}” "
+                        f"și „{reco_title} de {reco_artist}” sunt:\n"
+                        + ", ".join(sim_attrs) if sim_attrs else "Nu există asemănări majore."
+                    )
+                    diff_text = (
+                        f"Diferențele între melodia introdusă „{user_song}” "
+                        f"și „{reco_title} de {reco_artist}” sunt:\n"
+                        + ", ".join(diff_attrs) if diff_attrs else "Nu există diferențe majore."
+                    )
+                    tk.Label(scrollable_frame, text=sim_text, font=("Helvetica", 14), wraplength=750).pack(pady=2)
+                    tk.Label(scrollable_frame, text=diff_text, font=("Helvetica", 14), wraplength=750).pack(
+                        pady=(0, 10))
+
 
         back_button = tk.Button(scrollable_frame, text="Înapoi la ecranul principal", command=self.show_main_screen,
                                 bg=self.button_color, fg=self.button_text_color,
