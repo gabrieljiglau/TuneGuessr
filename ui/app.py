@@ -43,6 +43,7 @@ class MusicRecommenderApp:
 
         # A way to know how many songs the song recommender will recommend:
         self.recommend_songs_counter = 2
+        self._last_song_list = []
 
         # Start main screen
         self.show_main_screen()
@@ -65,7 +66,7 @@ class MusicRecommenderApp:
         command=self.start_quiz,
         bg=self.button_color, fg=self.button_text_color,
         font=("Helvetica", self.text_size, "bold"), width=25
-        )   
+        )
         func2_button.pack(pady=(40,0))
 
 
@@ -75,7 +76,6 @@ class MusicRecommenderApp:
             font=("Helvetica", self.text_size, "bold"), width=25
         )
         func3_button.pack(pady=(40,0))
-        self.recommend_songs_counter = 2
 
     def show_func1_screen(self):
         self.clear_screen()
@@ -187,8 +187,12 @@ class MusicRecommenderApp:
     def find_similar_songs_func3(self):
         song_input = self.songs_text.get("1.0", tk.END)
         song_list = [s.strip() for s in song_input.split('\n') if s.strip()]
+        self._last_song_list = song_list
+        self.display_similar_songs()
 
-        recommender = Recommender(song_list)
+
+    def display_similar_songs(self):
+        recommender = Recommender(self._last_song_list)
         closest_songs = recommender.find_similar_songs(self.recommend_songs_counter)
 
         self.clear_screen()
@@ -224,9 +228,10 @@ class MusicRecommenderApp:
 
             # assume song_list is still in scope
             for i, (group, sim_lists, diff_lists) in enumerate(zip(closest_songs, similarities, differences)):
-                user_song = song_list[i]
+                user_song = self._last_song_list[i]
 
-                spacer = tk.Label(scrollable_frame, text="––––––––––––––––––––––––––––––––––", font=("Helvetica", 12)) # to separate different songs
+                spacer = tk.Label(scrollable_frame, text="––––––––––––––––––––––––––––––––––",
+                                  font=("Helvetica", 12))  # to separate different songs
                 spacer.pack(pady=5)
 
                 for j, (_, row) in enumerate(group.iterrows()):
@@ -268,11 +273,20 @@ class MusicRecommenderApp:
                     tk.Label(scrollable_frame, text=diff_text, font=("Helvetica", 14), wraplength=750).pack(
                         pady=(0, 10))
 
+        more_songs_button = tk.Button(scrollable_frame, text="Mai multe recomandări",
+                                      command=self.increment_display_similar_songs,
+                                      bg=self.button_color, fg=self.button_text_color,
+                                      font=("Helvetica", self.text_size, "bold"))
+        more_songs_button.pack(pady=20)
 
         back_button = tk.Button(scrollable_frame, text="Înapoi la ecranul principal", command=self.show_main_screen,
                                 bg=self.button_color, fg=self.button_text_color,
                                 font=("Helvetica", self.text_size, "bold"))
         back_button.pack(pady=20)
+
+    def increment_display_similar_songs(self):
+        self.recommend_songs_counter += 1
+        self.display_similar_songs()
 
     #func2
 
