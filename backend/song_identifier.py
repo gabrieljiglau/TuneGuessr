@@ -1,11 +1,15 @@
+import os
 import pandas as pd
 from typing import List
 from .utils import find_song_titles
+from dotenv import load_dotenv
 
+load_dotenv()
+dataset_path = os.getenv('DATASET')
 
 class SongProcessor:
 
-   def __init__(self, answers: List, input_csv='../data/music_dataset.csv'):
+   def __init__(self, answers: List, input_csv=dataset_path):
       self.data_frame = pd.read_csv(input_csv)
       self.answers = answers
 
