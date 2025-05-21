@@ -4,14 +4,19 @@ from ttkthemes import ThemedTk
 from tkinter import ttk
 from youtubesearchpython import VideosSearch
 import webbrowser
-
 import sys
 import os
-backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(backend_dir)
+from dotenv import load_dotenv
 from backend.song_identifier import SongProcessor
 from backend.song_recommender import Recommender
 from backend.quiz_system import MusicQuizSystem
+
+load_dotenv()
+questions_path = os.getenv('QUESTIONS')
+answers_path = os.getenv('ANSWERS')
+dataset_path = os.getenv('DATASET')
+quiz_path = os.getenv('QUIZ')
+
 
 class MusicRecommenderApp:
     def __init__(self, root):
@@ -26,15 +31,15 @@ class MusicRecommenderApp:
         self.text_size = 16
 
         # Load questions for functionality 1
-        self.questions = pd.read_csv('../data/questions.csv')
-        self.answer_variants = pd.read_csv('../data/answer_variants.csv')
+        self.questions = pd.read_csv(questions_path)
+        self.answer_variants = pd.read_csv(answers_path)
         self.current_question_index = 0
         self.answers = []
 
         # Load quiz system for functionality 2
         self.quiz_system = MusicQuizSystem(
-        data_path='../data/music_dataset.csv',
-        questions_path='../data/questions_for_quiz.csv'
+        data_path=dataset_path,
+        questions_path=quiz_path
         )
         self.quiz_song = None
         self.quiz_correct_answers = []
