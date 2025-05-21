@@ -229,26 +229,48 @@ class MusicRecommenderApp:
         label = tk.Label(self.root, text=question, font=("Helvetica", 16))
         label.pack(pady=20)
 
-        self.quiz_answer_entry = tk.Entry(self.root, font=("Helvetica", 14))
-        self.quiz_answer_entry.pack(pady=10)
-        self.quiz_answer_entry.focus_set()
+        # Determinăm intervalul pentru slider în funcție de întrebare
+        if "duration" in feature.lower():
+            slider_from = 5
+            slider_to = 5500
+            resolution = 1
+        elif "decibel" in feature.lower() or "db" in feature.lower() or feature.lower() == "loudness":
+            slider_from = -60
+            slider_to = 4
+            resolution = 1
+        elif "tempo" in feature.lower():
+            slider_from = 0
+            slider_to = 250
+            resolution = 1
+        else:
+            slider_from = 0.0
+            slider_to = 1.0
+            resolution = 0.01
 
-        self.root.bind('<Return>', self.submit_quiz_answer_event)
+        self.quiz_answer_slider = tk.Scale(
+            self.root, from_=slider_from, to=slider_to, resolution=resolution,
+            orient=tk.HORIZONTAL, length=400, font=("Helvetica", 12), showvalue=True
+        )
+        # Setăm poziția implicită la mijloc
+        self.quiz_answer_slider.set((slider_from + slider_to) / 2)
+        self.quiz_answer_slider.pack(pady=10)
 
         submit_button = tk.Button(self.root, text="Trimite", command=self.save_quiz_answer,
                                 bg=self.button_color, fg=self.button_text_color,
                                 font=("Helvetica", self.text_size, "bold"))
         submit_button.pack(pady=20)
 
+
+
     def submit_quiz_answer_event(self, event):
         self.save_quiz_answer()
 
     def save_quiz_answer(self):
-        answer = self.quiz_answer_entry.get()
+        answer = self.quiz_answer_slider.get()
         self.quiz_user_answers.append(answer)
         self.quiz_current_index += 1
-        self.root.unbind('<Return>')  # remove binding to avoid stacking
         self.show_quiz_question()
+
 
     def finish_quiz(self):
         self.clear_screen()
