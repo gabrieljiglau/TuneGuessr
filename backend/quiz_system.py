@@ -111,11 +111,11 @@ class MusicQuizSystem:
             except:
                 similarity = 1 if str(ua).lower() == str(ca).lower() else 0
 
-            if similarity > 0.8:  # dacă e destul de apropiat
+            if similarity > 0.6:
                 score += 1
                 result = "Corect"
             else:
-                result = "Greșit"
+                result = "Gresit"
 
             print(f"Întrebarea {idx+1}: {result} (Răspuns corect: {ca})")
 
