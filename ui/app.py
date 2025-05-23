@@ -6,6 +6,7 @@ from youtubesearchpython import VideosSearch
 import webbrowser
 import sys
 import os
+from PIL import Image, ImageTk
 from dotenv import load_dotenv
 from backend.song_identifier import SongProcessor
 from backend.song_recommender import Recommender
@@ -16,6 +17,7 @@ questions_path = os.getenv('QUESTIONS')
 answers_path = os.getenv('ANSWERS')
 dataset_path = os.getenv('DATASET')
 quiz_path = os.getenv('QUIZ')
+akinator_path = os.getenv('AKINATOR')
 
 
 class MusicRecommenderApp:
@@ -55,6 +57,23 @@ class MusicRecommenderApp:
 
     def show_main_screen(self):
         self.clear_screen()
+
+        try:  # make akinator a background picture
+            if akinator_path and os.path.exists(akinator_path):
+                self.bg_image = Image.open(akinator_path)
+                self.bg_image = self.bg_image.resize((800, 600))
+                self.bg_photo = ImageTk.PhotoImage(self.bg_image)
+
+                bg_label = tk.Label(self.root, image=self.bg_photo)
+                bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+                bg_label.lower()
+            else:
+                print(f"Image not found at: {akinator_path}")
+                # Fallback to colored background
+                self.root.configure(bg="#f0f0f0")
+        except Exception as e:
+            print(f"Error loading background image: {e}")
+            self.root.configure(bg="#f0f0f0")
 
         main_label = tk.Label(self.root, text="TuneGuessr", font=("Helvetica", 20))
         main_label.pack(pady=(60,0))
@@ -216,8 +235,7 @@ class MusicRecommenderApp:
                                 font=("Helvetica", self.text_size, "bold"))
         back_button.pack(pady=20)
 
-    #func2
-
+    #functionalitatea 2 (Tu Ghicești Melodia)
     def show_quiz_question(self):
         self.clear_screen()
         if self.quiz_current_index >= len(self.quiz_system.feature_mapping):
@@ -233,26 +251,47 @@ class MusicRecommenderApp:
 
         label = tk.Label(self.root, text=question, font=("Helvetica", 16))
         label.pack(pady=20)
+#custom intervals
+        if "duration" in feature.lower():
+            slider_from = 5
+            slider_to = 5500
+            resolution = 1
+        elif "decibel" in feature.lower() or "db" in feature.lower() or feature.lower() == "loudness":
+            slider_from = -60
+            slider_to = 4
+            resolution = 1
+        elif "tempo" in feature.lower():
+            slider_from = 0
+            slider_to = 250
+            resolution = 1
+        else:
+            slider_from = 0.0
+            slider_to = 1.0
+            resolution = 0.01
 
-        self.quiz_answer_entry = tk.Entry(self.root, font=("Helvetica", 14))
-        self.quiz_answer_entry.pack(pady=10)
-        self.quiz_answer_entry.focus_set()
+        self.quiz_answer_slider = tk.Scale(
+            self.root, from_=slider_from, to=slider_to, resolution=resolution,
+            orient=tk.HORIZONTAL, length=400, font=("Helvetica", 12), showvalue=True
+        )
 
-        self.root.bind('<Return>', self.submit_quiz_answer_event)
+        #  pozitia default a slideurilui la mijloc
+        self.quiz_answer_slider.set((slider_from + slider_to) / 2)
+        self.quiz_answer_slider.pack(pady=10)
 
         submit_button = tk.Button(self.root, text="Trimite", command=self.save_quiz_answer,
                                 bg=self.button_color, fg=self.button_text_color,
                                 font=("Helvetica", self.text_size, "bold"))
         submit_button.pack(pady=20)
 
+
+
     def submit_quiz_answer_event(self, event):
         self.save_quiz_answer()
 
     def save_quiz_answer(self):
-        answer = self.quiz_answer_entry.get()
+        answer = self.quiz_answer_slider.get()
         self.quiz_user_answers.append(answer)
         self.quiz_current_index += 1
-        self.root.unbind('<Return>')  # remove binding to avoid stacking
         self.show_quiz_question()
 
     def finish_quiz(self):
