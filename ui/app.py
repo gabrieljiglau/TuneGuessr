@@ -6,6 +6,7 @@ from youtubesearchpython import VideosSearch
 import webbrowser
 import sys
 import os
+from PIL import Image, ImageTk
 from dotenv import load_dotenv
 from backend.song_identifier import SongProcessor
 from backend.song_recommender import Recommender
@@ -16,6 +17,7 @@ questions_path = os.getenv('QUESTIONS')
 answers_path = os.getenv('ANSWERS')
 dataset_path = os.getenv('DATASET')
 quiz_path = os.getenv('QUIZ')
+akinator_path = os.getenv('AKINATOR')
 
 
 class MusicRecommenderApp:
@@ -55,6 +57,23 @@ class MusicRecommenderApp:
 
     def show_main_screen(self):
         self.clear_screen()
+
+        try:  # make akinator a background picture
+            if akinator_path and os.path.exists(akinator_path):
+                self.bg_image = Image.open(akinator_path)
+                self.bg_image = self.bg_image.resize((800, 600))
+                self.bg_photo = ImageTk.PhotoImage(self.bg_image)
+
+                bg_label = tk.Label(self.root, image=self.bg_photo)
+                bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+                bg_label.lower()
+            else:
+                print(f"Image not found at: {akinator_path}")
+                # Fallback to colored background
+                self.root.configure(bg="#f0f0f0")
+        except Exception as e:
+            print(f"Error loading background image: {e}")
+            self.root.configure(bg="#f0f0f0")
 
         main_label = tk.Label(self.root, text="TuneGuessr", font=("Helvetica", 20))
         main_label.pack(pady=(60,0))
